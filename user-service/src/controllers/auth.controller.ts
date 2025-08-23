@@ -59,7 +59,7 @@ const AuthController = {
     // Find user by email
     const user = await UserService.find({ email });
     if (!user || !(await user.comparePassword(password))) {
-      return res.status(401).json({ message: 'Invalid email or password' });
+      return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
 
     // Generate JWT token

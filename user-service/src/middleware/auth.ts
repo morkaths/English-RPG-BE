@@ -12,8 +12,8 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
     const token = authHeader && authHeader.split(' ')[1]; // Format: "Bearer TOKEN"
     if (!token) return res.status(401).json({ success: false, message: 'No authentication token provided' });
 
-    const decoded = jwt.verify(token, JWT_SECRET) as { _id: string };
-    const user = await UserModel.findById(decoded._id);
+    const decoded = jwt.verify(token, JWT_SECRET) as { userId: string };
+    const user = await UserModel.findById(decoded.userId);
     if (!user) return res.status(401).json({ success: false, message: 'User not found' });
 
     (req as AuthRequest).user = user;

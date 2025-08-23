@@ -12,6 +12,13 @@ const router = Router();
 router.get('/', UserController.getAll);
 
 /**
+ * @route   GET /api/user/find
+ * @desc    Get user by key (username or email)
+ * @access  Public
+ */
+router.get('/find', UserController.find);
+
+/**
  * @route   GET /api/user/:id
  * @desc    Get user by ID
  * @access  Public
@@ -26,7 +33,7 @@ router.get('/:id', UserController.getById);
 router.put('/:id', authenticateToken, requireAdmin, UserController.update);
 
 /**
- * @route   DELETE /api/user/:id
+ * @route   DELETE /api/user/:id 
  * @desc    Delete user by ID
  * @access  Private
  */

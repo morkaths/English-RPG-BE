@@ -12,7 +12,25 @@ const UserController = {
 
     getById: asyncHandler(async (req: Request, res: Response) => {
         const { id } = req.params;
-        const user = await UserService.find({ id });
+        const user = await UserService.getById(id);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+        res.status(200).json({ success: true, user });
+    }),
+
+    find: asyncHandler(async (req: Request, res: Response) => {
+        const { key } = req.query;
+        if (!key || typeof key !== 'string') {
+            return res.status(400).json({ success: false, message: 'Key query parameter is required' });
+        }
+
+        let condition: any = [
+            { username: key },
+            { email: key }
+        ];
+
+        const user = await UserService.find({ $or: condition });
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
@@ -22,7 +40,7 @@ const UserController = {
     update: asyncHandler(async (req: Request, res: Response) => {
         const { id } = req.params;
         const updates = req.body;
-        
+
         const user = await UserService.getById(id);
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
