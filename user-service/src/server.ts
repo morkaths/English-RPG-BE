@@ -3,13 +3,14 @@ import mongoose from 'mongoose';
 
 import app from './app';
 import { connectDB } from './config/database';
-import { PORT } from './utils/constants';
+import { PORT, BASE_URL } from './config/constants';
 
 const server = http.createServer(app);
 
 connectDB().then(() => {
   server.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
+      console.log(`Server running on ${BASE_URL}`);
   });
 });
 

@@ -1,0 +1,40 @@
+
+import { Request, Response, NextFunction } from 'express';
+import jwt from 'jsonwebtoken';
+import { JWT_SECRET } from '../config/constants';
+import { UserModel } from '../models/user.model';
+import { AuthRequest } from '../types/request';
+
+// Middleware to authenticate JWT
+export const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(' ')[1]; // Format: "Bearer TOKEN"
+    if (!token) return res.status(401).json({ success: false, message: 'No authentication token provided' });
+
+    const decoded = jwt.verify(token, JWT_SECRET) as { _id: string };
+    const user = await UserModel.findById(decoded._id);
+    if (!user) return res.status(401).json({ success: false, message: 'User not found' });
+
+    (req as AuthRequest).user = user;
+    next();
+  } catch (error) {
+    return res.status(401).json({ success: false, message: 'Invalid token' });
+  }
+};
+
+export const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
+  const user = (req as AuthRequest).user;
+  
+  // Kiểm tra xem đã xác thực token chưa
+  if (!user) {
+    return res.status(401).json({ success: false, message: 'You need to log in first' });
+  }
+
+  // Kiểm tra role
+  if (user.role !== 'admin') {
+    return res.status(403).json({ success: false, message: 'Access denied' });
+  }
+
+  next();
+};
