@@ -45,14 +45,25 @@ const UserSchema = new Schema<IUser>({
   isVerified: { 
     type: Boolean, 
     default: false 
-  },
-  joinedAt: { 
-    type: Date, 
-    default: Date.now 
   }
 }, { timestamps: true });
 
-// Hash password before saving
+async function hashPasswordInUpdate(this: any, next: Function) {
+  let update: any = this.getUpdate();
+
+  if (update?.$set && update.$set.password) {
+    const salt = await bcrypt.genSalt(12);
+    update.$set.password = await bcrypt.hash(update.$set.password, salt);
+  } else if (update?.password) {
+    const salt = await bcrypt.genSalt(12);
+    update.password = await bcrypt.hash(update.password, salt);
+  }
+
+  this.setUpdate(update);
+  next();
+}
+
+// Hash password before saving (create)
 UserSchema.pre('save', async function(next) {
   if (!this.isModified('password')) return next();
   
@@ -60,6 +71,11 @@ UserSchema.pre('save', async function(next) {
   this.password = await bcrypt.hash(this.password, salt);
   next();
 });
+
+// Hash password before update (findByIdAndUpdate, findOneAndUpdate, updateOne)
+UserSchema.pre('findOneAndUpdate', hashPasswordInUpdate);
+UserSchema.pre('updateOne', hashPasswordInUpdate);
+UserSchema.pre('updateMany', hashPasswordInUpdate);
 
 // Compare password method
 UserSchema.methods.comparePassword = async function(password: string): Promise<boolean> {

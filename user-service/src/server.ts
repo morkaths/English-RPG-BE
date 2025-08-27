@@ -2,11 +2,12 @@ import http from 'http';
 import mongoose from 'mongoose';
 
 import app from './app';
-import { connectDB } from './config/database';
-import { PORT, BASE_URL } from './config/constants';
+import { connectDB } from './config/database.config';
+import { PORT, BASE_URL } from './config/env.config';
 
 const server = http.createServer(app);
 
+// Kết nối đến MongoDB
 connectDB().then(() => {
   server.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);

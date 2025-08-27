@@ -6,7 +6,7 @@ import helmet from 'helmet';
 import passport from 'passport';
 
 import routes from './routes';
-import { FRONTEND_URL } from './config/constants';
+import { FRONTEND_URL } from './config/env.config';
 import { errorHandler } from './middleware/errorHandler';
 
 

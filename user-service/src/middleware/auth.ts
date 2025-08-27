@@ -1,9 +1,9 @@
 
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { JWT_SECRET } from '../config/constants';
+import { JWT_SECRET } from '../config/env.config';
 import { UserModel } from '../models/user.model';
-import { AuthRequest } from '../types/request';
+import { UserRequest } from '../types/request';
 
 // Middleware to authenticate JWT
 export const authenticateToken = async (req: Request, res: Response, next: NextFunction) => {
@@ -16,7 +16,7 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
     const user = await UserModel.findById(decoded.userId);
     if (!user) return res.status(401).json({ success: false, message: 'User not found' });
 
-    (req as AuthRequest).user = user;
+    (req as UserRequest).user = user;
     next();
   } catch (error) {
     return res.status(401).json({ success: false, message: 'Invalid token' });
@@ -24,7 +24,7 @@ export const authenticateToken = async (req: Request, res: Response, next: NextF
 };
 
 export const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
-  const user = (req as AuthRequest).user;
+  const user = (req as UserRequest).user;
   
   // Kiểm tra xem đã xác thực token chưa
   if (!user) {

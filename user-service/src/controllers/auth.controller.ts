@@ -1,10 +1,10 @@
 import jwt from 'jsonwebtoken';
 import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
-import { AuthRequest } from '../types/request';
+import type { UserRequest } from '../types/request';
 import UserService from '../services/user.service';
 import { asyncHandler } from '../middleware/errorHandler';
-import { JWT_SECRET, JWT_EXPIRES_IN } from 'src/config/constants';
+import { JWT_SECRET, JWT_EXPIRES_IN } from 'src/config/env.config';
 
 
 const generateToken = (userId: string): string => {
@@ -38,7 +38,7 @@ const AuthController = {
       message: 'User registered successfully',
       token,
       user: {
-        id: user._id,
+        _id: user._id,
         username: user.username,
         email: user.email,
         role: user.role,
@@ -69,19 +69,18 @@ const AuthController = {
       message: 'Login successful',
       token,
       user: {
-        id: user._id,
+        _id: user._id,
         username: user.username,
         email: user.email,
         role: user.role,
         avatar: user.avatar,
-        isVerified: user.isVerified,
-        joinedAt: user.joinedAt
+        isVerified: user.isVerified
       }
     });
   }),
 
-  me: asyncHandler(async (req: Request, res: Response) => {
-    const user = (req as AuthRequest).user;
+  profile: asyncHandler(async (req: Request, res: Response) => {
+    const user = (req as UserRequest).user;
     if (!user) {
       return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
@@ -91,7 +90,7 @@ const AuthController = {
 
   // update profile
   update: asyncHandler(async (req: Request, res: Response) => {
-    const id = (req as AuthRequest).user?._id?.toString();
+    const id = (req as UserRequest).user?._id?.toString();
     if (!id) {
       return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
@@ -101,7 +100,14 @@ const AuthController = {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    const updatedUser = await UserService.update(id, req.body);
+    const { newPassword, oldPassword, ...otherUpdates } = req.body;
+    if (oldPassword && newPassword) {
+      if (!(await user.comparePassword(oldPassword))) {
+        return res.status(400).json({ success: false, message: 'Old password is incorrect' });
+      }
+    }
+    otherUpdates.password = newPassword;
+    const updatedUser = await UserService.update(id, otherUpdates);
     if (!updatedUser) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }

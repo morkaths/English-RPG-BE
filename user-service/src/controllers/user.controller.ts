@@ -1,13 +1,13 @@
 import { Request, Response } from 'express';
 import { validationResult } from 'express-validator';
-import { AuthRequest } from '../types/request';
+import { UserRequest } from '../types/request';
 import UserService from '../services/user.service';
 import { asyncHandler } from '../middleware/errorHandler';
 
 const UserController = {
     getAll: asyncHandler(async (req: Request, res: Response) => {
         const users = await UserService.getAll();
-        res.status(200).json({ success: true, users });
+        res.status(200).json({ success: true, data: users });
     }),
 
     getById: asyncHandler(async (req: Request, res: Response) => {
@@ -16,7 +16,7 @@ const UserController = {
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
-        res.status(200).json({ success: true, user });
+        res.status(200).json({ success: true, data: user });
     }),
 
     find: asyncHandler(async (req: Request, res: Response) => {
@@ -34,7 +34,7 @@ const UserController = {
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
-        res.status(200).json({ success: true, user });
+        res.status(200).json({ success: true, data: user });
     }),
 
     update: asyncHandler(async (req: Request, res: Response) => {

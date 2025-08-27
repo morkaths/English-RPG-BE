@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import { MONGODB_URI } from '../config/constants';
+import { MONGODB_URI } from '../config/env.config';
 import { seedUsers } from './user.seed';
 
 async function seed() {

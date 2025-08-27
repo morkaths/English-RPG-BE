@@ -28,7 +28,7 @@ router.post('/login', AuthController.login);
  * @desc    Get current user
  * @access  Private
  */
-router.get('/profile', authenticateToken, AuthController.me);
+router.get('/profile', authenticateToken, AuthController.profile);
 
 /**
  * @route   PUT /api/auth/update-profile
