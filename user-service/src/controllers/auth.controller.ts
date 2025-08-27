@@ -43,8 +43,7 @@ const AuthController = {
         email: user.email,
         role: user.role,
         avatar: user.avatar,
-        isVerified: user.isVerified,
-        joinedAt: user.joinedAt
+        isVerified: user.isVerified
       }
     });
   }),

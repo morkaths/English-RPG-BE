@@ -8,7 +8,8 @@ export interface IUser extends Document {
   role: 'admin' | 'staff' | 'user';
   avatar?: string;
   isVerified: boolean;
-  joinedAt: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
   comparePassword(password: string): Promise<boolean>;
 }
 

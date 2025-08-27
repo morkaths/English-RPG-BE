@@ -1,10 +1,11 @@
 import { UserModel } from '../models/user.model';
 
 export async function seedUsers() {
-    // Xóa toàn bộ user cũ (nếu muốn)
+
+    // Clear existing users
     await UserModel.deleteMany({});
 
-    // Thêm user mẫu
+    // Insert new users
     await UserModel.create([
         {
             username: 'admin',
