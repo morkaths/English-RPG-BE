@@ -1,10 +1,9 @@
 import jwt from 'jsonwebtoken';
 import { Request, Response } from 'express';
-import { validationResult } from 'express-validator';
 import type { UserRequest } from '../types/request';
-import UserService from '../services/user.service';
 import { asyncHandler } from '../middleware/errorHandler';
-import { JWT_SECRET, JWT_EXPIRES_IN } from 'src/config/env.config';
+import { JWT_SECRET, JWT_EXPIRES_IN } from '../config/env.config';
+import UserService from '../services/user.service';
 
 
 const generateToken = (userId: string): string => {
@@ -14,25 +13,20 @@ const generateToken = (userId: string): string => {
 const AuthController = {
 
   register: asyncHandler(async (req: Request, res: Response) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
     const { username, email, password } = req.body;
+
     // Check if user already exists
-    const existingUser = await UserService.find({ $or: [{ username }, { email }] });
-    if (existingUser) {
+    const existed = await UserService.findOne({ email });
+    if (existed) {
       return res.status(400).json({
         success: false,
-        message: existingUser.email === email ? 'Email already registered' : 'Username already taken'
+        message: 'Email already registered'
       });
     }
 
     // Create new user
     const user = await UserService.create({ username, email, password } as any);
     const token = generateToken((user._id as any).toString());
-
     res.status(201).json({
       success: true,
       message: 'User registered successfully',
@@ -49,14 +43,9 @@ const AuthController = {
   }),
 
   login: asyncHandler(async (req: Request, res: Response) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-      return res.status(400).json({ errors: errors.array() });
-    }
-
+    // Check if user exists
     const { email, password } = req.body;
-    // Find user by email
-    const user = await UserService.find({ email });
+    const user = await UserService.findOne({ email });
     if (!user || !(await user.comparePassword(password))) {
       return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
@@ -83,35 +72,32 @@ const AuthController = {
     if (!user) {
       return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
-
     res.status(200).json({ success: true, user: user });
   }),
 
-  // update profile
   update: asyncHandler(async (req: Request, res: Response) => {
     const id = (req as UserRequest).user?._id?.toString();
     if (!id) {
       return res.status(401).json({ success: false, message: 'Unauthorized' });
     }
 
+    // Find user by ID
     const user = await UserService.getById(id);
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
+    // Update password fields
     const { newPassword, oldPassword, ...otherUpdates } = req.body;
     if (oldPassword && newPassword) {
       if (!(await user.comparePassword(oldPassword))) {
         return res.status(400).json({ success: false, message: 'Old password is incorrect' });
       }
-    }
-    otherUpdates.password = newPassword;
-    const updatedUser = await UserService.update(id, otherUpdates);
-    if (!updatedUser) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+      otherUpdates.password = newPassword;
     }
 
-    res.status(200).json({ success: true, user: updatedUser });
+    await UserService.update(id, otherUpdates);
+    res.status(200).json({ success: true, message: 'Profile updated successfully' });
   })
 
 };

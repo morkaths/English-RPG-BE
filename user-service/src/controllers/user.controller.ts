@@ -1,65 +1,73 @@
 import { Request, Response } from 'express';
-import { validationResult } from 'express-validator';
-import { UserRequest } from '../types/request';
 import UserService from '../services/user.service';
 import { asyncHandler } from '../middleware/errorHandler';
 
 const UserController = {
-    getAll: asyncHandler(async (req: Request, res: Response) => {
-        const users = await UserService.getAll();
-        res.status(200).json({ success: true, data: users });
-    }),
+  getAll: asyncHandler(async (req: Request, res: Response) => {
+    const users = await UserService.getAll();
+    res.status(200).json({ success: true, data: users });
+  }),
 
-    getById: asyncHandler(async (req: Request, res: Response) => {
-        const { id } = req.params;
-        const user = await UserService.getById(id);
-        if (!user) {
-            return res.status(404).json({ success: false, message: 'User not found' });
-        }
-        res.status(200).json({ success: true, data: user });
-    }),
+  getById: asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    
+    // Check if user exists
+    const user = await UserService.getById(id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    res.status(200).json({ success: true, data: user });
+  }),
 
-    find: asyncHandler(async (req: Request, res: Response) => {
-        const { key } = req.query;
-        if (!key || typeof key !== 'string') {
-            return res.status(400).json({ success: false, message: 'Key query parameter is required' });
-        }
+  search: asyncHandler(async (req: Request, res: Response) => {
+    const { key } = req.query;
+    if (!key || typeof key !== 'string') {
+      return res.status(400).json({ success: false, message: 'Key query parameter is required' });
+    }
 
-        let condition: any = [
-            { username: key },
-            { email: key }
-        ];
+    let condition: any = [
+      { username: { $regex: key, $options: 'i' } },
+      { email: { $regex: key, $options: 'i' } }
+    ];
 
-        const user = await UserService.find({ $or: condition });
-        if (!user) {
-            return res.status(404).json({ success: false, message: 'User not found' });
-        }
-        res.status(200).json({ success: true, data: user });
-    }),
+    const users = await UserService.find({ $or: condition });
+    res.status(200).json({ success: true, data: users });
+  }),
 
-    update: asyncHandler(async (req: Request, res: Response) => {
-        const { id } = req.params;
-        const updates = req.body;
+  update: asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+    const data = req.body;
 
-        const user = await UserService.getById(id);
-        if (!user) {
-            return res.status(404).json({ success: false, message: 'User not found' });
-        }
+    // Check if user exists
+    const user = await UserService.getById(id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
 
-        await UserService.update(id, updates);
-        res.status(200).json({ success: true, message: 'User updated successfully' });
-    }),
+    // Check if email is being updated and if it already exists
+    if (data.email) {
+      const exited = await UserService.findOne({ email: data.email });
+      if (exited && exited._id?.toString() !== id) {
+        return res.status(400).json({ success: false, message: 'Email already exists' });
+      }
+    }
 
-    delete: asyncHandler(async (req: Request, res: Response) => {
-        const { id } = req.params;
-        const user = await UserService.getById(id);
-        if (!user) {
-            return res.status(404).json({ success: false, message: 'User not found' });
-        }
+    await UserService.update(id, data);
+    res.status(200).json({ success: true, message: 'User updated successfully' });
+  }),
 
-        await UserService.delete(id);
-        res.status(200).json({ success: true, message: 'User deleted successfully' });
-    })
+  delete: asyncHandler(async (req: Request, res: Response) => {
+    const { id } = req.params;
+
+    // Check if user exists
+    const user = await UserService.getById(id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    await UserService.delete(id);
+    res.status(200).json({ success: true, message: 'User deleted successfully' });
+  })
 
 };
 

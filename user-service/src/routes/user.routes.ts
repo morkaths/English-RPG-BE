@@ -12,11 +12,11 @@ const router = Router();
 router.get('/', UserController.getAll);
 
 /**
- * @route   GET /api/user/find
+ * @route   GET /api/user/search?key=...
  * @desc    Get user by key (username or email)
  * @access  Public
  */
-router.get('/find', UserController.find);
+router.get('/search', UserController.search);
 
 /**
  * @route   GET /api/user/:id
