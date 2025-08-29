@@ -33,14 +33,14 @@ const CourseController = {
     let andCondition: any[] = [{ $or: orCondition }];
 
     // Filter by level
-    if (level && Array.isArray(level)) {
-      const levels = level.map(level => level.toString());
+    if (level) {
+      const levels = Array.isArray(level) ? level.map(l => l.toString()) : [level.toString()];
       andCondition.push({ level: { $in: levels } });
     }
 
     // Filter by tags
-    if (tag && Array.isArray(tag)) {
-      const tags = tag.map(tag => tag.toString());
+    if (tag) {
+      const tags = Array.isArray(tag) ? tag.map(t => t.toString()) : [tag.toString()];
       andCondition.push({ tags: { $in: tags } });
     }
 
@@ -51,10 +51,10 @@ const CourseController = {
   create: asyncHandler(async (req: Request, res: Response) => {
     const data = req.body;
 
-    // Check if course name already exists
-    const existed = await CourseService.findOne({ name: data.name });
+    // Check if course title already exists
+    const existed = await CourseService.findOne({ title: data.title });
     if (existed) {
-      return res.status(400).json({ success: false, message: 'Course name already exists' });
+      return res.status(400).json({ success: false, message: 'Course title already exists' });
     }
 
     const course = await CourseService.create(data);
@@ -71,11 +71,11 @@ const CourseController = {
       return res.status(404).json({ success: false, message: 'Course not found' });
     }
 
-    // Check if course name is being updated and if it already exists
-    if (data.name) {
-      const exited = await CourseService.findOne({ name: data.name });
-      if (exited && exited._id?.toString() !== id) {
-        return res.status(400).json({ success: false, message: 'Course name already exists' });
+    // Check if course title is being updated and if it already exists
+    if (data.title && data.title !== course.title) {
+      const exited = await CourseService.findOne({ title: data.title });
+      if (exited) {
+        return res.status(400).json({ success: false, message: 'Course title already exists' });
       }
     }
 

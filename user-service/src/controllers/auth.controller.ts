@@ -6,8 +6,8 @@ import { JWT_SECRET, JWT_EXPIRES_IN } from '../config/env.config';
 import UserService from '../services/user.service';
 
 
-const generateToken = (userId: string): string => {
-  return jwt.sign({ userId }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN } as jwt.SignOptions);
+const generateToken = (userId: string, role: string): string => {
+  return jwt.sign({ userId, role }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN } as jwt.SignOptions);
 };
 
 const AuthController = {
@@ -26,7 +26,7 @@ const AuthController = {
 
     // Create new user
     const user = await UserService.create({ username, email, password } as any);
-    const token = generateToken((user._id as any).toString());
+    const token = generateToken((user._id as any).toString(), user.role);
     res.status(201).json({
       success: true,
       message: 'User registered successfully',
@@ -51,7 +51,7 @@ const AuthController = {
     }
 
     // Generate JWT token
-    const token = generateToken((user._id as any).toString());
+    const token = generateToken((user._id as any).toString(), user.role);
     res.status(200).json({
       success: true,
       message: 'Login successful',

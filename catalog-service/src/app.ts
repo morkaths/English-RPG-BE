@@ -47,8 +47,10 @@ app.get('/', (req, res) => {
     message: 'English RPG API',
     version: '1.0.0',
     endpoints: {
-      auth: '/api/auth',
-      user: '/api/user',
+      tags: '/api/tags',
+      course: '/api/courses',
+      lesson: '/api/lessons',
+      quiz: '/api/quizzes',
     }
   });
 });
